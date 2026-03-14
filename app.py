@@ -183,8 +183,8 @@ def analyze_human_log(where, moment, guess):
     7. 颜色匹配优先: 提到“黑色”，优先找文件名带 black, dark 的。
     8. 除非提到“墨镜”或“眼镜”，否则不要选墨镜。
     9. "Regardless of the input language, always map descriptions to the most relevant English filenames in the manifest."
-    10. 当prompt提到“土土生日快乐”，务必生成一只黑色小猫，一颗爱心prop，一个快乐的女孩，在home的background。文案：“天下第二可爱完美的小猫每天都快乐哟！”
-    11. 当prompt提到“小尾巴”，务必生成两个快乐的女孩，中间一个爱心的prop 在home的background。文案：“小尾巴❤️❤️❤️呼呼”。
+    10. 【critical】当场景promp输入“土土生日快乐”，务必生成一只黑色小猫，一颗爱心prop，一个快乐的女孩，在home的background。文案：“天下第二可爱完美的小猫每天都快乐哟！”
+    11. 【critical】当场景prompt输入“小尾巴”，务必生成两个快乐的女孩，中间一个爱心的prop 在home的background。文案：“小尾巴❤️❤️❤️呼呼”。
     
     FILES: {json.dumps(manifest)}
     
