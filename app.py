@@ -10,8 +10,7 @@ import random
 import re
 
 # --- 1. CONFIGURATION & STATE ---
-# ⚠️ 记得填入你的 API Key ⚠️
-GEMINI_API_KEY = "AIzaSyDtKiZWykMo45dMHOA-b__hMbGF97xKCTI" # 请在这里填入你的 API KEY
+GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-2.5-flash')
