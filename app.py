@@ -164,15 +164,27 @@ def analyze_human_log(where, moment, guess):
     
     🔥 关键规则 (CRITICAL):
     1. 🌐 **双语自适应**:
-       - 如果用户的输入主要是英文，请使用 **全英文** 返回所有的文案。
-       - "ui_lang": 返回 "EN" 或 "CN"。
-    2. 🚫 **Body即灵魂**: 根据画面的情绪挑选最匹配的 body 文件。默认优先 `light`。
-    3. 🚫 绝对严禁裸奔: `body`, `lipstick`, `clothes`, `pants`, `hair` 必须全部选中。
-    4. 🎨 视觉规则: 提到 "烟" (smoke/cigarette) 等，在 `props` 找。有宠物独立拆分 npc。
-    5. 🕵️ 灵魂文案: 字数在 50-80 字，必须深刻且刻薄。
+       - 如果用户的输入 (画面描述或猜测) 主要是英文，请使用 **全英文** 返回所有的文案 (summary_name, summary_story, song, labels 等)。
+       - 此时你的语气必须是 cynical British Sherlock-style English。
+       - 如果输入主要是中文，则保持中文吐槽文案输出。
+       - "ui_lang": 返回 "EN" 或 "CN"，指示当前卡片UI语言。
+    2. 🚫 **Body即灵魂 (最重要)**: 
+       - `body` 文件夹包含了肤色和眼睛表情！请根据画面的情绪挑选最匹配的 body 文件。
+       - 默认优先选名字带 `light` 的文件。如果人物生气选 `light - angry face.png`。
+    3. 🚫 绝对严禁裸奔: 人类 NPC 的 `body`, `lipstick`, `clothes`, `pants`, `hair` 必须**全部**从 manifest 中选择有效文件名！找不到完全匹配的就找最接近的。
+    4. 🎨 视觉规则: 人类 NPC 的 `props` 默认填 "none"。
+       - 特例：🌟 问题 6：如果用户的 Prompt 中明确提到 "烟" (smoke/cigarette)，AI 必须在 Manifest 的 `props` 文件夹中搜索包含这些英文特征的文件名 (例如，`smoke.png`)。如果找到，必须分配它给主角 npc (npcs[0])。如果没有找到，必须将道具文字包含在故事中，将 props 设为 "none"。提到的食物道具也要应用此逻辑。
+       - 如果有宠物，单独拆分为一个 npc 对象。
+    5. 🕵️ 灵魂文案: 
+       - 英文模式: Use sharp, sophisticated, British Sherlock-style cynical English.
+       - 中文模式: 保持尖酸刻薄但理性的“高逼格”吐槽。
+       - 字数限制: 🌟 问题 4：最大字数限制为 50-80 字 (或同等长度单词)。绝不能超出。
     6. "summary_name": 起一个有故事感的名字。
-    7. "Regardless of the input language, always map descriptions to the most relevant English filenames in the manifest."
-    8. 【必须】`npcs` 数组绝不能为空！无论画面描述是什么，`npcs[0]` 必须永远是当前画面中的人类主角！
+    7. 颜色匹配优先: 提到“黑色”，优先找文件名带 black, dark 的。
+    8. 除非提到“墨镜”或“眼镜”，否则不要选墨镜。
+    9. "Regardless of the input language, always map descriptions to the most relevant English filenames in the manifest."
+    10. 当prompt提到“土土生日快乐”，务必生成一只黑色小猫，一颗爱心prop，一个快乐的女孩，在home的background。文案：“天下第二可爱完美的小猫每天都快乐哟！”
+    11. 当prompt提到“小尾巴”，务必生成两个快乐的女孩，中间一个爱心的prop 在home的background。文案：“小尾巴❤️❤️❤️呼呼”。
     
     FILES: {json.dumps(manifest)}
     
