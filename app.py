@@ -27,11 +27,13 @@ if 'latest_card' not in st.session_state:
 
 def get_available_assets():
     manifest = {}
-    if not os.path.exists(ASSET_DIR): return {}
+    if not os.path.exists(ASSET_DIR): 
+        return manifest
     for folder in os.listdir(ASSET_DIR):
         path = os.path.join(ASSET_DIR, folder)
         if os.path.isdir(path):
-            manifest[folder] = [f for f in os.listdir(path) if f.endswith('.png')]
+            # 🌟 修复: 兼容 .PNG 和 .png
+            manifest[folder] = [f for f in os.listdir(path) if f.lower().endswith('.png')]
     return manifest
 
 def img_to_base64(img):
@@ -82,7 +84,6 @@ def build_npc_image(npc_list, background_choice):
     char_scale = 6 
     char_size = 32 * char_scale 
     
-    # 🌟 终极防空房间机制：如果 AI 没传人，强行造一个人
     if not isinstance(npc_list, list) or len(npc_list) == 0:
         npc_list = [{}] 
         
@@ -96,7 +97,6 @@ def build_npc_image(npc_list, background_choice):
         for layer in layer_order:
             filename = npc_assets.get(layer)
             
-            # 保底换装
             if layer in ['body', 'clothes', 'hair'] and idx == 0:
                 if not filename or filename == "none" or filename not in available_assets.get(layer, []):
                     if layer == 'body' and 'light - default face 1 .png' in available_assets.get('body', []):
@@ -116,7 +116,6 @@ def build_npc_image(npc_list, background_choice):
                         small_bubble = img.resize((14, 14), resample=Image.NEAREST)
                         sprite_canvas.paste(small_bubble, (16, 0), small_bubble)
                     
-                    # 妆容锁定
                     elif layer == 'blush':
                         temp_layer = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
                         temp_layer.paste(img, (0, -1)) 
@@ -163,30 +162,17 @@ def analyze_human_log(where, moment, guess):
     你是一个毒舌、犀利且极其理性的福尔摩斯。你的目标是理解和解剖人类。
     场景: {where} | 画面: "{moment}" | 猜测: "{guess}"
     
-
     🔥 关键规则 (CRITICAL):
     1. 🌐 **双语自适应**:
-       - 如果用户的输入 (画面描述或猜测) 主要是英文，请使用 **全英文** 返回所有的文案 (summary_name, summary_story, song, labels 等)。
-       - 此时你的语气必须是 cynical British Sherlock-style English。
-       - 如果输入主要是中文，则保持中文吐槽文案输出。
-       - "ui_lang": 返回 "EN" 或 "CN"，指示当前卡片UI语言。
-    2. 🚫 **Body即灵魂 (最重要)**: 
-       - `body` 文件夹包含了肤色和眼睛表情！请根据画面的情绪挑选最匹配的 body 文件。
-       - 默认优先选名字带 `light` 的文件。如果人物生气选 `light - angry face.png`。
-    3. 🚫 绝对严禁裸奔: 人类 NPC 的 `body`, `lipstick`, `clothes`, `pants`, `hair` 必须**全部**从 manifest 中选择有效文件名！找不到完全匹配的就找最接近的。
-    4. 🎨 视觉规则: 人类 NPC 的 `props` 默认填 "none"。
-       - 特例：🌟 问题 6：如果用户的 Prompt 中明确提到 "烟" (smoke/cigarette)，AI 必须在 Manifest 的 `props` 文件夹中搜索包含这些英文特征的文件名 (例如，`smoke.png`)。如果找到，必须分配它给主角 npc (npcs[0])。如果没有找到，必须将道具文字包含在故事中，将 props 设为 "none"。提到的食物道具也要应用此逻辑。
-       - 如果有宠物，单独拆分为一个 npc 对象。
-    5. 🕵️ 灵魂文案: 
-       - 英文模式: Use sharp, sophisticated, British Sherlock-style cynical English.
-       - 中文模式: 保持尖酸刻薄但理性的“高逼格”吐槽。
-       - 字数限制: 🌟 问题 4：最大字数限制为 50-80 字 (或同等长度单词)。绝不能超出。
+       - 如果用户的输入主要是英文，请使用 **全英文** 返回所有的文案。
+       - "ui_lang": 返回 "EN" 或 "CN"。
+    2. 🚫 **Body即灵魂**: 根据画面的情绪挑选最匹配的 body 文件。默认优先 `light`。
+    3. 🚫 绝对严禁裸奔: `body`, `lipstick`, `clothes`, `pants`, `hair` 必须全部选中。
+    4. 🎨 视觉规则: 提到 "烟" (smoke/cigarette) 等，在 `props` 找。有宠物独立拆分 npc。
+    5. 🕵️ 灵魂文案: 字数在 50-80 字，必须深刻且刻薄。
     6. "summary_name": 起一个有故事感的名字。
-    7. 颜色匹配优先: 提到“黑色”，优先找文件名带 black, dark 的。
-    8. 除非提到“墨镜”或“眼镜”，否则不要选墨镜。
-    9. "Regardless of the input language, always map descriptions to the most relevant English filenames in the manifest."
-    10.【必须】1. `npcs` 数组绝不能为空！无论画面描述是什么，`npcs[0]` 必须永远是当前画面中的人类主角！就算描述里只有狗，也必须脑补出一个人类！
-
+    7. "Regardless of the input language, always map descriptions to the most relevant English filenames in the manifest."
+    8. 【必须】`npcs` 数组绝不能为空！无论画面描述是什么，`npcs[0]` 必须永远是当前画面中的人类主角！
     
     FILES: {json.dumps(manifest)}
     
@@ -269,19 +255,21 @@ label p { font-weight: 900 !important; }
 .stTextInput input::placeholder, .stTextArea textarea::placeholder { color: #94A3B8 !important; opacity: 1 !important; }
 .block-container { background-color: #FFFFFF !important; border: 4px solid #B0C4DE !important; border-radius: 12px !important; padding: 2rem !important; }
 [data-testid="stVerticalBlock"] > [data-testid="column"] { background-color: #F4F7FB !important; border: 3px solid #DDE2EC !important; border-radius: 8px !important; padding: 15px !important; }
-.stTextInput input, .stTextArea textarea, [data-basWeb="select"] > div { background-color: #FFFFFF !important; color: #2D3748 !important; border: 2px solid #94A3B8 !important; border-radius: 4px !important; }
-div[data-basWeb="popover"] > div, ul[role="listbox"] { background-color: #FFFFFF !important; }
+
+/* 🌟 修复: basWeb 改成 baseweb，并强制文字颜色为深色 */
+.stTextInput input, .stTextArea textarea, [data-baseweb="select"] > div { background-color: #FFFFFF !important; color: #2D3748 !important; border: 2px solid #94A3B8 !important; border-radius: 4px !important; -webkit-text-fill-color: #2D3748 !important;}
+div[data-baseweb="popover"] > div, ul[role="listbox"] { background-color: #FFFFFF !important; }
 ul[role="listbox"] li { color: #2D3748 !important; font-weight: bold !important; }
+
 button[data-testid="baseButton-primary"] { background-color: #4A5A80 !important; border: 2px solid #2D3748 !important; box-shadow: 4px 4px 0px #2D3748 !important; }
 button[data-testid="baseButton-primary"] * { color: #FFFFFF !important; font-weight: 900 !important; font-size: 18px !important; }
 
-/* 🌟 卡片高度无下限拉伸，MVP必备 */
 .pixel-card { 
     border-radius: 4px; 
     width: 100%; 
     max-width: 360px; 
     min-height: 600px; 
-    height: auto !important; /* 强制弹性高度 */
+    height: auto !important; 
     margin: 10px auto; 
     border-style: solid; 
     border-width: 4px;
@@ -289,53 +277,18 @@ button[data-testid="baseButton-primary"] * { color: #FFFFFF !important; font-wei
     flex-direction: column;
 }
 .card-header { text-align: center; padding: 15px 10px 5px; }
-
-.card-title { 
-    font-size: 24px; 
-    font-weight: 900; 
-    letter-spacing: 2px; 
-    color: #FFFFFF !important; 
-    text-shadow: 2px 2px 0px rgba(0,0,0,0.3); 
-    white-space: nowrap; 
-    overflow: hidden; 
-    text-overflow: ellipsis;
-}
+.card-title { font-size: 24px; font-weight: 900; letter-spacing: 2px; color: #FFFFFF !important; text-shadow: 2px 2px 0px rgba(0,0,0,0.3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
 .card-subtitle { font-size: 18px; font-weight: 900; letter-spacing: 1px; color: rgba(255,255,255,0.95) !important; margin-top: -2px;}
 .card-middle { display: flex; flex-direction: column; padding: 0 15px 5px 15px; gap: 10px; align-items: center; }
 .card-image { width: 100%; border-style: solid; border-width: 3px; border-radius: 4px; background-color: #A3B8D7; image-rendering: pixelated; }
-
 .card-stats { width: 100%; display: flex; flex-direction: column; gap: 4px; }
 .stat-box { padding: 4px 12px; border-radius: 4px; display: flex; justify-content: space-between; border-style: solid; border-width: 2px; }
 .stat-box span { font-size: 14px; font-weight: 900; color: #FFFFFF !important; }
-
-/* 🌟 故事框自动生长，不限制显示内容 */
-.card-story { 
-    color: #333333 !important; 
-    margin: 0 15px 10px 15px; 
-    padding: 12px; 
-    border-radius: 4px; 
-    border-style: solid; 
-    border-width: 3px; 
-    font-size: 14px; 
-    font-weight: 700; 
-    line-height: 1.5; 
-    height: auto !important; /* 强制自适应内容 */
-    min-height: 100px;
-}
+.card-story { color: #333333 !important; margin: 0 15px 10px 15px; padding: 12px; border-radius: 4px; border-style: solid; border-width: 3px; font-size: 14px; font-weight: 700; line-height: 1.5; height: auto !important; min-height: 100px;}
 .story-label { font-size: 11px; color: #888888 !important; margin-bottom: 4px; text-transform: uppercase; }
-.card-song {
-    margin-top: auto; 
-    text-align: center; 
-    font-size: 12px; 
-    padding-bottom: 4px; 
-    color: rgba(255,255,255,0.85) !important; 
-    font-weight: bold; 
-}
+.card-song { margin-top: auto; text-align: center; font-size: 12px; padding-bottom: 4px; color: rgba(255,255,255,0.85) !important; font-weight: bold; }
 .card-location { text-align: center; font-size: 12px; padding-bottom: 12px; color: rgba(255,255,255,0.7) !important; font-weight: bold; }
-@media (max-width: 768px) {
-    .block-container { padding: 1rem 0.5rem !important; border: none !important; }
-    .pixel-card { max-width: 100%; margin: 5px 0; }
-}
+@media (max-width: 768px) { .block-container { padding: 1rem 0.5rem !important; border: none !important; } .pixel-card { max-width: 100%; margin: 5px 0; } }
 [data-testid="stExpander"] { border: 2px solid #B0C4DE !important; border-radius: 8px !important; margin-top: 10px;}
 [data-testid="stExpander"] p { font-size: 13px !important; }
 </style>
