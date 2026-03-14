@@ -185,6 +185,7 @@ def analyze_human_log(where, moment, guess):
     9. "Regardless of the input language, always map descriptions to the most relevant English filenames in the manifest."
     10. 【critical】当场景promp输入“土土生日快乐”，务必生成一只黑色小猫，一颗爱心prop，一个快乐的女孩，在home的background。文案：“天下第二可爱完美的小猫每天都快乐哟！”
     11. 【critical】当场景prompt输入“小尾巴”，务必生成两个快乐的女孩，中间一个爱心的prop 在home的background。文案：“小尾巴❤️❤️❤️呼呼”。
+    12. 💬 **气泡克制 (status)**: 🌟 绝大多数情况下必须填 "none"！绝对不要每个卡片都加气泡！只有当描述中明确写出人物有极其强烈的情绪（如极度愤怒、突然震惊、热恋中心碎）时，才从 status 文件夹选择对应气泡。以及有动物出现时，都要加入❤️心形气泡。
     
     FILES: {json.dumps(manifest)}
     
